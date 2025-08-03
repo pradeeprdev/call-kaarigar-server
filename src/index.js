@@ -4,6 +4,7 @@ const connectDB = require('../config/db');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const serviceRoutes = require('../routes/serviceRoutes');
 
 // Load env vars
 dotenv.config();
@@ -31,6 +32,8 @@ try {
 
 // Routes
 app.use('/api/users', require('../routes/userRoutes'));
+app.use('/api/services', serviceRoutes);
+app.use('/api/categories', require('../routes/categoryRoutes'));
 
 // Basic route
 app.get('/', (req, res) => {
