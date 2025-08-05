@@ -25,9 +25,8 @@ const serviceSchema = new mongoose.Schema({
     ref: 'User', // Worker who created the service
     required: true
   },
-  price: {
-    type: Number,
-    required: true
+  basePrice: {
+    type: Number
   },
   estimatedDuration: {
     type: String, // e.g. '30 mins', '1 hour'
