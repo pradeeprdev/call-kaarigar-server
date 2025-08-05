@@ -5,7 +5,9 @@ const {
   loginUser,
   logoutUser, 
   getUsers, 
-  getUserProfile 
+  getUserProfile,
+  updateUser,
+  deleteUser
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/auth');
 const { validateRegistration, validateLogin } = require('../middleware/validation');
@@ -18,5 +20,9 @@ router.post('/login', validateLogin, loginUser);
 router.post('/logout', protect, logoutUser);
 router.get('/profile', protect, getUserProfile);
 router.get('/all', protect, authorize('admin'), getUsers);
+
+// CRUD operations
+router.put('/:id', protect, updateUser);
+router.delete('/:id', protect, deleteUser);
 
 module.exports = router;

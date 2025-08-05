@@ -34,6 +34,13 @@ try {
 app.use('/api/users', require('../routes/userRoutes'));
 app.use('/api/services', serviceRoutes);
 app.use('/api/categories', require('../routes/categoryRoutes'));
+app.use('/api/worker-profile', require('../routes/workerProfileRoutes'));
+app.use('/api/customer-profile', require('../routes/customerProfileRoutes'));
+app.use('/api/bookings', require('../routes/bookingRoutes'));
+app.use('/api/reviews', require('../routes/reviewRoutes'));
+app.use('/api/payments', require('../routes/paymentRoutes'));
+app.use('/api/notifications', require('../routes/notificationRoutes'));
+app.use('/api/worker-documents', require('../routes/workerDocumentRoutes'));
 
 // Basic route
 app.get('/', (req, res) => {

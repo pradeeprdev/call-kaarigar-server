@@ -16,9 +16,14 @@ const bookingSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  serviceCategoryId: {
+  serviceId: {
     type: String,
-    ref: 'ServiceCategory',
+    ref: 'Service',
+    required: true
+  },
+  address_id:{
+    type: String,
+    ref: 'Address',
     required: true
   },
   bookingDate: {
@@ -29,10 +34,7 @@ const bookingSchema = new mongoose.Schema({
     type: String, // e.g. '09:00-11:00'
     required: true
   },
-  addOns: {
-    type: [String], // optional extra services
-    default: []
-  },
+  
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'],

@@ -12,6 +12,10 @@ const workerProfileSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  bio: {
+    type: String,
+    required: true
+  },
   skills: {
     type: [{
     type: String,
@@ -23,9 +27,9 @@ const workerProfileSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  serviceAreas: {
-    type: [String], // e.g. ['District A', 'City B']
-    required: true
+  isVerified: {
+    type: Boolean,
+    default: false
   },
   availabilitySlots: [
     {

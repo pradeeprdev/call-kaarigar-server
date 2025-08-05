@@ -179,3 +179,91 @@ exports.logoutUser = async (req, res) => {
     res.status(500).json({ message: 'Server error during logout' });
   }
 };
+
+// Update user profile
+exports.updateUser = async (req, res) => {
+  try {
+    const { name, email, phone, password, role } = req.body;
+    const userId = req.params.id;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Only admin can update role and other users' profiles
+    if (req.user.role !== 'admin' && req.user.id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this profile' });
+    }
+
+    // Check if email is being changed and is unique
+    if (email && email !== user.email) {
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+    }
+
+    // Check if phone is being changed and is unique
+    if (phone && phone !== user.phone) {
+      const existingPhone = await User.findOne({ phone });
+      if (existingPhone) {
+        return res.status(400).json({ message: 'Phone number already in use' });
+      }
+    }
+
+    // Update user
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.phone = phone || user.phone;
+    if (password) {
+      user.password = password; // Will be hashed by pre-save middleware
+    }
+    // Only admin can update role
+    if (role && req.user.role === 'admin') {
+      user.role = role;
+    }
+
+    await user.save();
+
+    // Return updated user without password
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({
+      message: 'User updated successfully',
+      user: userResponse
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ message: 'Server error during update' });
+  }
+};
+
+// Delete user
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Only admin can delete users, or users can delete their own account
+    if (req.user.role !== 'admin' && req.user.id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this user' });
+    }
+
+    await user.deleteOne();
+
+    res.json({
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ message: 'Server error during deletion' });
+  }
+};
