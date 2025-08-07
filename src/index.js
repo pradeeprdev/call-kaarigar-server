@@ -1,26 +1,5 @@
-const express = require('express');
-const dotenv = require('dotenv');
+const app = require('../app');
 const connectDB = require('../config/db');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-const serviceRoutes = require('../routes/serviceRoutes');
-
-// Load env vars
-dotenv.config();
-
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Move static file serving to BEFORE routes
-// This is important - static middleware should be before your routes
-const publicPath = path.resolve(__dirname, '../public');
-console.log('Public directory absolute path:', publicPath);
-app.use(express.static(publicPath));
 
 // DB Connection
 try {
@@ -30,29 +9,38 @@ try {
   // Continue even if DB connection fails
 }
 
-// Routes
-app.use('/api/users', require('../routes/userRoutes'));
-app.use('/api/services', serviceRoutes);
-app.use('/api/categories', require('../routes/categoryRoutes'));
-app.use('/api/worker-profile', require('../routes/workerProfileRoutes'));
-app.use('/api/customer-profile', require('../routes/customerProfileRoutes'));
-app.use('/api/bookings', require('../routes/bookingRoutes'));
-app.use('/api/reviews', require('../routes/reviewRoutes'));
-app.use('/api/payments', require('../routes/paymentRoutes'));
-app.use('/api/notifications', require('../routes/notificationRoutes'));
-app.use('/api/worker-documents', require('../routes/workerDocumentRoutes'));
+// Configure routes
+const routes = {
+  '/api/users': '../routes/userRoutes',
+  '/api/services': '../routes/serviceRoutes',
+  '/api/categories': '../routes/categoryRoutes',
+  '/api/worker-profile': '../routes/workerProfileRoutes',
+  '/api/customer-profile': '../routes/customerProfileRoutes',
+  '/api/bookings': '../routes/bookingRoutes',
+  '/api/reviews': '../routes/reviewRoutes',
+  '/api/payments': '../routes/paymentRoutes',
+  '/api/notifications': '../routes/notificationRoutes',
+  '/api/worker-documents': '../routes/workerDocumentRoutes',
+  '/api/addresses': '../routes/addressRoutes'
+};
 
-// Basic route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(publicPath, 'login.html'));
+// Register routes
+Object.entries(routes).forEach(([path, routeModule]) => {
+  try {
+    const route = require(routeModule);
+    app.use(path, route);
+  } catch (error) {
+    console.error(`Error loading route ${path}:`, error.message);
+  }
 });
 
-// Debug route for login page
+// Basic routes
+app.get('/', (req, res) => {
+  res.redirect('/login');
+});
+
 app.get('/login', (req, res) => {
-  const loginPath = path.join(publicPath, 'login.html');
-  console.log('Login path:', loginPath);
-  console.log('File exists:', fs.existsSync(loginPath));
-  res.sendFile(loginPath);
+  res.sendFile('login.html', { root: path.join(__dirname, '../public') });
 });
 
 // Error handler
@@ -62,6 +50,10 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
+// Set higher limit for event listeners
+require('events').EventEmitter.defaultMaxListeners = 15;
+
+// Create HTTP server
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Try accessing: http://localhost:${PORT}/login.html`);
@@ -71,4 +63,25 @@ const server = app.listen(PORT, () => {
 // Handle server errors
 server.on('error', (error) => {
   console.error('Server error:', error);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  server.close(() => process.exit(1));
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Rejection:', error);
+  server.close(() => process.exit(1));
 });
