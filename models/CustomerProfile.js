@@ -30,7 +30,11 @@ const customerProfileSchema = new mongoose.Schema({
       type: Boolean,
       default: true
     }
-  }
+  },
+  joinedAt: {
+    type: Date,
+    default: Date.now 
+  },
 }, {
   timestamps: true
 });

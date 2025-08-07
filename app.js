@@ -1,9 +1,9 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 // Load env vars
 dotenv.config();
@@ -52,16 +52,18 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Limit JSON body size
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/users', require('./routes/userRoutes'));
-
 // Serve static files
-app.use(express.static('public'));
+const publicPath = path.resolve(__dirname, 'public');
+console.log('Public directory absolute path:', publicPath);
+app.use(express.static(publicPath));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  res.status(500).json({ 
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 module.exports = app;

@@ -15,33 +15,27 @@ const serviceSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  categoryId: {
+  service_categoryId: {
     type: String,
     ref: 'ServiceCategory',
     required: true
   },
-  createdBy: {
-    type: String,
-    ref: 'User', // Worker who created the service
+  baseprice:{
+    type: Number,
     required: true
   },
-  basePrice: {
-    type: Number
-  },
-  estimatedDuration: {
-    type: String, // e.g. '30 mins', '1 hour'
-    default: ''
-  },
-  availableSlots: [
-    {
-      date: Date,
-      timeSlots: [String] // e.g. ['10:00-11:00']
-    }
-  ],
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  },
 }, {
   timestamps: true
 });

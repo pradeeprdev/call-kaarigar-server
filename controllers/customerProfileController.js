@@ -1,10 +1,37 @@
 const CustomerProfile = require('../models/CustomerProfile');
 
+// Helper function to validate customer profile data
+const validateProfileData = (data) => {
+    const requiredFields = ['phoneNumber'];
+    const missingFields = requiredFields.filter(field => !data[field]);
+    
+    if (missingFields.length > 0) {
+        return {
+            isValid: false,
+            error: `Missing required fields: ${missingFields.join(', ')}`
+        };
+    }
+
+    // Validate phone number format (you can adjust the regex as needed)
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(data.phoneNumber)) {
+        return {
+            isValid: false,
+            error: 'Invalid phone number format. Must be 10 digits.'
+        };
+    }
+
+    return { isValid: true };
+};
+
 // @desc    Create customer profile
 // @route   POST /api/customer-profile
 // @access  Private (Customer only)
 exports.createCustomerProfile = async (req, res) => {
     try {
+        console.log('Creating customer profile:', req.body);
+
+        // Role validation
         if (req.user.role !== 'customer') {
             return res.status(403).json({
                 success: false,
@@ -12,11 +39,13 @@ exports.createCustomerProfile = async (req, res) => {
             });
         }
 
+        // Check for existing profile
         const existingProfile = await CustomerProfile.findOne({ userId: req.user._id });
         if (existingProfile) {
             return res.status(400).json({
                 success: false,
-                message: 'Customer profile already exists'
+                message: 'Customer profile already exists',
+                profile: existingProfile
             });
         }
 

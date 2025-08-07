@@ -1,21 +1,62 @@
 const Service = require('../models/Service');
+const ServiceCategory = require('../models/ServiceCategory');
+
+// Helper function to validate service data
+const validateServiceData = (data) => {
+    const requiredFields = ['title', 'service_categoryId', 'baseprice'];
+    const missingFields = requiredFields.filter(field => !data[field]);
+    
+    if (missingFields.length > 0) {
+        return {
+            isValid: false,
+            error: `Missing required fields: ${missingFields.join(', ')}`
+        };
+    }
+
+    if (data.baseprice && (isNaN(data.baseprice) || data.baseprice <= 0)) {
+        return {
+            isValid: false,
+            error: 'Base price must be a positive number'
+        };
+    }
+
+    return { isValid: true };
+};
 
 // @desc    Create a new service
 // @route   POST /api/services
-// @access  Private (Worker only)
+// @access  Private (Admin only)
 exports.createService = async (req, res) => {
     try {
-        // Only allow if the logged in user is a worker
-        if (req.user.role !== 'worker') {
+        // Only allow if the logged in user is an admin
+        if (req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
-                message: 'Only workers can create a service'
+                message: 'Only administrators can create services'
+            });
+        }
+
+        // Validate input data
+        const validation = validateServiceData(req.body);
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                error: validation.error
+            });
+        }
+
+        // Check if category exists
+        const categoryExists = await ServiceCategory.findById(req.body.service_categoryId);
+        if (!categoryExists) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid service category'
             });
         }
 
         const service = await Service.create({
             ...req.body,
-            createdBy: req.user._id
+            isActive: true
         });
 
         res.status(201).json({
