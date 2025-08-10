@@ -2,7 +2,7 @@ const CustomerProfile = require('../models/CustomerProfile');
 
 // Helper function to validate customer profile data
 const validateProfileData = (data) => {
-    const requiredFields = ['phoneNumber'];
+    const requiredFields = ['phoneNumber', 'address'];
     const missingFields = requiredFields.filter(field => !data[field]);
     
     if (missingFields.length > 0) {
@@ -12,13 +12,38 @@ const validateProfileData = (data) => {
         };
     }
 
-    // Validate phone number format (you can adjust the regex as needed)
+    // Validate phone number format
     const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(data.phoneNumber)) {
         return {
             isValid: false,
             error: 'Invalid phone number format. Must be 10 digits.'
         };
+    }
+
+    // Validate address ID is provided
+    if (!data.address) {
+        return {
+            isValid: false,
+            error: 'Address ID is required'
+        };
+    }
+
+    // Validate preferences if provided
+    if (data.preferences) {
+        if (data.preferences.language && !['en', 'hi'].includes(data.preferences.language)) {
+            return {
+                isValid: false,
+                error: 'Invalid language preference. Must be either "en" or "hi"'
+            };
+        }
+        if (typeof data.preferences.notifications !== 'undefined' && 
+            typeof data.preferences.notifications !== 'boolean') {
+            return {
+                isValid: false,
+                error: 'Notifications preference must be a boolean'
+            };
+        }
     }
 
     return { isValid: true };
@@ -49,10 +74,25 @@ exports.createCustomerProfile = async (req, res) => {
             });
         }
 
-        const profile = await CustomerProfile.create({
+        // Validate profile data
+        const validation = validateProfileData(req.body);
+        if (!validation.isValid) {
+            return res.status(400).json({
+                success: false,
+                error: validation.error
+            });
+        }
+
+        // Create profile with provided data
+        const profileData = {
             userId: req.user._id,
-            ...req.body
-        });
+            phoneNumber: req.body.phoneNumber,
+            address: req.body.address,
+            language: req.body.language || 'en',
+            joinedAt: new Date()
+        };
+
+        const profile = await CustomerProfile.create(profileData);
 
         res.status(201).json({
             success: true,
@@ -74,7 +114,8 @@ exports.createCustomerProfile = async (req, res) => {
 exports.getAllCustomerProfiles = async (req, res) => {
     try {
         const profiles = await CustomerProfile.find()
-            .populate('userId', 'name email phone');
+            .populate('userId', 'name email phone')
+            .populate('address');
 
         res.status(200).json({
             success: true,
@@ -97,7 +138,8 @@ exports.getAllCustomerProfiles = async (req, res) => {
 exports.getCustomerProfile = async (req, res) => {
     try {
         const profile = await CustomerProfile.findById(req.params.id)
-            .populate('userId', 'name email phone');
+            .populate('userId', 'name email phone')
+            .populate('address');
 
         if (!profile) {
             return res.status(404).json({
@@ -207,3 +249,6 @@ exports.deleteCustomerProfile = async (req, res) => {
         });
     }
 };
+
+// Note: Address-related operations should be handled by the addressController instead
+// The CustomerProfile only stores a reference to an address
