@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
-const { addressSchema } = require('./Addresses');
 
 const customerProfileSchema = new mongoose.Schema({
   _id: {
@@ -13,28 +12,24 @@ const customerProfileSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  address: [
-    addressSchema
-
-  ],
+  address: {
+    type: String,
+    ref: 'Address',
+    required: true
+  },
   phoneNumber: {
     type: String,
     required: true
   },
-  preferences: {
-    language: {
-      type: String,
-      default: 'en'
-    },
-    notifications: {
-      type: Boolean,
-      default: true
-    }
+  language: {
+    type: String,
+    default: 'en',
+    enum: ['en', 'hi'] // Only allow English and Hindi
   },
   joinedAt: {
     type: Date,
     default: Date.now 
-  },
+  }
 }, {
   timestamps: true
 });
