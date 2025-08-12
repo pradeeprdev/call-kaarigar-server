@@ -68,26 +68,28 @@ app.use(express.static(publicPath));
 
 // Import routes
 const serviceRoutes = require('./routes/serviceRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
+const serviceCategoryRoutes = require('./routes/serviceCategoryRoutes');
 const workerServiceRoutes = require('./routes/workerServiceRoutes');
 const userRoutes = require('./routes/userRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const customerProfileRoutes = require('./routes/customerProfileRoutes');
 const workerProfileRoutes = require('./routes/workerProfileRoutes');
+const workerDocumentRoutes = require('./routes/workerDocumentRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 
 // Register routes
 app.use('/api/services', serviceRoutes);
-app.use('/api/service-categories', categoryRoutes);
+app.use('/api/service-categories', serviceCategoryRoutes);
 app.use('/api/worker-services', workerServiceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/customer-profiles', customerProfileRoutes);
 app.use('/api/worker-profiles', workerProfileRoutes);
+app.use('/api/worker-documents', workerDocumentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments', paymentRoutes);
