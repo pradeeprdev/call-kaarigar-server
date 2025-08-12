@@ -8,7 +8,7 @@ const workerServiceSchema = new mongoose.Schema({
   },
   workerId: {
     type: String,
-    ref: 'User', // or 'WorkerProfile' if you're referencing WorkerProfile directly
+    ref: 'WorkerProfile',
     required: true
   },
   serviceId: {
@@ -17,8 +17,21 @@ const workerServiceSchema = new mongoose.Schema({
     required: true
   },
   customPrice: {
-    type: Number, // You can use Decimal128 if you're handling precise money
-    required: true
+    type: Number,
+    required: true,
+    min: [0, 'Price must be greater than 0']
+  },
+  experience: {
+    type: String,
+    default: '0 years'
+  },
+  description: {
+    type: String,
+    default: ''
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

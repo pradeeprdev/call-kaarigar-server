@@ -23,8 +23,20 @@ exports.createWorkerProfile = async (req, res) => {
             });
         }
 
+        // Validate required fields
+        const { photo, bio, skills } = req.body;
+        if (!photo) {
+            return res.status(400).json({
+                success: false,
+                message: 'Profile photo is required'
+            });
+        }
+
         const profile = await WorkerProfile.create({
             userId: req.user._id,
+            photo,
+            bio,
+            skills,
             ...req.body
         });
 
@@ -124,9 +136,20 @@ exports.updateWorkerProfile = async (req, res) => {
             delete req.body.isVerified;
         }
 
+        // Create update object with validated fields
+        const updateData = { ...req.body };
+        
+        // Validate photo if it's being updated
+        if (updateData.photo === '') {
+            return res.status(400).json({
+                success: false,
+                message: 'Profile photo cannot be empty'
+            });
+        }
+
         profile = await WorkerProfile.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData,
             { new: true, runValidators: true }
         ).populate('userId', 'name email phone')
          .populate('skills', 'name description');

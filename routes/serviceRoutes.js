@@ -1,23 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const serviceController = require('../controllers/serviceController');
 const { protect, authorize } = require('../middleware/auth');
+const {
+    createService,
+    getAllServices,
+    getServiceById,
+    updateService,
+    deleteService,
+    getServicesByCategory,
+    searchServices,
+    getActiveServices,
+    toggleServiceStatus
+} = require('../controllers/serviceController');
 
-// Public routes - Anyone can view services
-router.get('/', serviceController.getAllServices);
-router.get('/category/:categoryId', serviceController.getServicesByCategory);
-router.get('/:id', serviceController.getServiceById);
+// Public routes
+router.get('/search', searchServices);
+router.get('/active', getActiveServices);
+router.get('/category/:categoryId', getServicesByCategory);
+router.get('/', getAllServices);
+router.get('/:id', getServiceById);
 
-// Admin routes - Service management
-router.use(protect); // Apply authentication to all routes below
-
-router.post('/', authorize('admin'), serviceController.createService);
-router.put('/:id', authorize('admin'), serviceController.updateService);
-router.patch('/:id/status', authorize('admin'), serviceController.toggleServiceStatus);
-router.delete('/:id', authorize('admin'), serviceController.deleteService);
-
-// Search and filter routes
-router.get('/search', serviceController.searchServices);
-router.get('/active', serviceController.getActiveServices);
+// Protected routes
+router.post('/', protect, authorize('admin'), createService);
+router.put('/:id', protect, authorize('admin'), updateService);
+router.patch('/:id/status', protect, authorize('admin'), toggleServiceStatus);
+router.delete('/:id', protect, authorize('admin'), deleteService);
 
 module.exports = router;

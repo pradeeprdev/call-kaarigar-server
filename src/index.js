@@ -13,7 +13,7 @@ try {
 const routes = {
   '/api/users': '../routes/userRoutes',
   '/api/services': '../routes/serviceRoutes',
-  '/api/categories': '../routes/categoryRoutes',
+  '/api/service-categories': '../routes/categoryRoutes',
   '/api/worker-profile': '../routes/workerProfileRoutes',
   '/api/customer-profile': '../routes/customerProfileRoutes',
   '/api/bookings': '../routes/bookingRoutes',
@@ -21,6 +21,7 @@ const routes = {
   '/api/payments': '../routes/paymentRoutes',
   '/api/notifications': '../routes/notificationRoutes',
   '/api/worker-documents': '../routes/workerDocumentRoutes',
+  '/api/worker-services': '../routes/workerServiceRoutes',
   '/api/addresses': '../routes/addressRoutes'
 };
 
