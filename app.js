@@ -51,6 +51,14 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Limit JSON body size
 app.use(express.urlencoded({ extended: true }));
 
+// URL normalization middleware to handle duplicate slashes
+app.use((req, res, next) => {
+    if (req.url.indexOf('//') !== -1) {
+        req.url = req.url.replace(/\/+/g, '/');
+    }
+    next();
+});
+
 // Serve static files
 const publicPath = path.resolve(__dirname, 'public');
 console.log('Public directory absolute path:', publicPath);
