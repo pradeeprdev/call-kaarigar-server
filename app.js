@@ -19,9 +19,8 @@ const corsOptions = {
     'http://localhost:8000',    // Alternative Flutter web port
     'capacitor://localhost',    // For mobile apps using Capacitor
     'http://localhost',         // Generic localhost
-    // Add your production domains here when ready
-    // 'https://your-production-domain.com',
-    // 'https://your-flutter-app-domain.com'
+    'https://callkaarigar.onrender.com',  // Production domain
+    'http://callkaarigar.onrender.com'    // Production domain (HTTP)
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
@@ -57,12 +56,46 @@ const publicPath = path.resolve(__dirname, 'public');
 console.log('Public directory absolute path:', publicPath);
 app.use(express.static(publicPath));
 
+// Import routes
+const serviceRoutes = require('./routes/serviceRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const workerServiceRoutes = require('./routes/workerServiceRoutes');
+const userRoutes = require('./routes/userRoutes');
+const addressRoutes = require('./routes/addressRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const customerProfileRoutes = require('./routes/customerProfileRoutes');
+const workerProfileRoutes = require('./routes/workerProfileRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+
+// Register routes
+app.use('/api/services', serviceRoutes);
+app.use('/api/service-categories', categoryRoutes);
+app.use('/api/worker-services', workerServiceRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/customer-profiles', customerProfileRoutes);
+app.use('/api/worker-profiles', workerProfileRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/payments', paymentRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Cannot ${req.method} ${req.url}`
   });
 });
 

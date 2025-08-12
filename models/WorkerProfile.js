@@ -12,6 +12,10 @@ const workerProfileSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  photo: {
+    type: String, // URL or file path to the profile photo
+    required: true
+  },
   bio: {
     type: String,
     required: true
