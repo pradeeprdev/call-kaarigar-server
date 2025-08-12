@@ -41,7 +41,14 @@ exports.getAllBookings = async (req, res) => {
         const bookings = await Booking.find()
             .populate('customerId', 'name email')
             .populate('workerId', 'name email')
-            .populate('serviceId');
+            .populate({
+                path: 'workerServiceId',
+                populate: {
+                    path: 'serviceId',
+                    select: 'title description baseprice'
+                }
+            })
+            .populate('address_id');
 
         res.status(200).json({
             success: true,
@@ -65,7 +72,14 @@ exports.getCustomerBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ customerId: req.user._id })
             .populate('workerId', 'name email')
-            .populate('serviceId');
+            .populate({
+                path: 'workerServiceId',
+                populate: {
+                    path: 'serviceId',
+                    select: 'title description baseprice'
+                }
+            })
+            .populate('address_id');
 
         res.status(200).json({
             success: true,
@@ -89,7 +103,14 @@ exports.getWorkerBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ workerId: req.user._id })
             .populate('customerId', 'name email')
-            .populate('serviceId');
+            .populate({
+                path: 'workerServiceId',
+                populate: {
+                    path: 'serviceId',
+                    select: 'title description baseprice'
+                }
+            })
+            .populate('address_id');
 
         res.status(200).json({
             success: true,
@@ -114,7 +135,14 @@ exports.getBooking = async (req, res) => {
         const booking = await Booking.findById(req.params.id)
             .populate('customerId', 'name email')
             .populate('workerId', 'name email')
-            .populate('serviceId');
+            .populate({
+                path: 'workerServiceId',
+                populate: {
+                    path: 'serviceId',
+                    select: 'title description baseprice'
+                }
+            })
+            .populate('address_id');
 
         if (!booking) {
             return res.status(404).json({
@@ -183,7 +211,14 @@ exports.updateBooking = async (req, res) => {
         )
             .populate('customerId', 'name email')
             .populate('workerId', 'name email')
-            .populate('serviceId');
+            .populate({
+                path: 'workerServiceId',
+                populate: {
+                    path: 'serviceId',
+                    select: 'title description baseprice'
+                }
+            })
+            .populate('address_id');
 
         res.status(200).json({
             success: true,

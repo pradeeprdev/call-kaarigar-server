@@ -1,26 +1,130 @@
 const Service = require('../models/Service');
 const ServiceCategory = require('../models/ServiceCategory');
 
-// Helper function to validate service data
-const validateServiceData = (data) => {
-    const requiredFields = ['title', 'service_categoryId', 'baseprice'];
-    const missingFields = requiredFields.filter(field => !data[field]);
-    
-    if (missingFields.length > 0) {
-        return {
-            isValid: false,
-            error: `Missing required fields: ${missingFields.join(', ')}`
-        };
-    }
+// @desc    Get services by category
+// @route   GET /api/services/category/:categoryId
+// @access  Public
+exports.getServicesByCategory = async (req, res) => {
+    try {
+        const services = await Service.find({ service_categoryId: req.params.categoryId })
+            .populate('service_categoryId', 'name description icon')
+            .sort({ createdAt: -1 });
 
-    if (data.baseprice && (isNaN(data.baseprice) || data.baseprice <= 0)) {
-        return {
-            isValid: false,
-            error: 'Base price must be a positive number'
-        };
+        res.status(200).json({
+            success: true,
+            count: services.length,
+            data: services
+        });
+    } catch (error) {
+        console.error('Get services by category error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching services',
+            error: error.message
+        });
     }
+};
 
-    return { isValid: true };
+// @desc    Search services
+// @route   GET /api/services/search
+// @access  Public
+exports.searchServices = async (req, res) => {
+    try {
+        const { q, category, minPrice, maxPrice } = req.query;
+        const query = {};
+
+        if (q) {
+            query.$or = [
+                { title: { $regex: q, $options: 'i' } },
+                { description: { $regex: q, $options: 'i' } }
+            ];
+        }
+
+        if (category) {
+            query.service_categoryId = category;
+        }
+
+        if (minPrice || maxPrice) {
+            query.baseprice = {};
+            if (minPrice) query.baseprice.$gte = Number(minPrice);
+            if (maxPrice) query.baseprice.$lte = Number(maxPrice);
+        }
+
+        const services = await Service.find(query)
+            .populate('service_categoryId', 'name description icon')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: services.length,
+            data: services
+        });
+    } catch (error) {
+        console.error('Search services error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error searching services',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get active services
+// @route   GET /api/services/active
+// @access  Public
+exports.getActiveServices = async (req, res) => {
+    try {
+        const services = await Service.find({ isActive: true })
+            .populate('service_categoryId', 'name description icon')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: services.length,
+            data: services
+        });
+    } catch (error) {
+        console.error('Get active services error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching active services',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Toggle service status
+// @route   PATCH /api/services/:id/status
+// @access  Private (Admin)
+exports.toggleServiceStatus = async (req, res) => {
+    try {
+        const service = await Service.findById(req.params.id);
+
+        if (!service) {
+            return res.status(404).json({
+                success: false,
+                message: 'Service not found'
+            });
+        }
+
+        service.isActive = !service.isActive;
+        await service.save();
+
+        const updatedService = await Service.findById(service._id)
+            .populate('service_categoryId', 'name description icon');
+
+        res.status(200).json({
+            success: true,
+            data: updatedService
+        });
+    } catch (error) {
+        console.error('Toggle service status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error toggling service status',
+            error: error.message
+        });
+    }
 };
 
 // @desc    Create a new service
@@ -28,40 +132,56 @@ const validateServiceData = (data) => {
 // @access  Private (Admin only)
 exports.createService = async (req, res) => {
     try {
-        // Only allow if the logged in user is an admin
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Only administrators can create services'
-            });
-        }
+        const { title, description, service_categoryId, baseprice } = req.body;
 
-        // Validate input data
-        const validation = validateServiceData(req.body);
-        if (!validation.isValid) {
+        // Validate request body
+        if (!title || !service_categoryId || !baseprice) {
             return res.status(400).json({
                 success: false,
-                error: validation.error
+                message: 'Title, service category and base price are required'
             });
         }
 
-        // Check if category exists
-        const categoryExists = await ServiceCategory.findById(req.body.service_categoryId);
-        if (!categoryExists) {
+        // Validate base price
+        if (baseprice <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid service category'
+                message: 'Base price must be greater than 0'
             });
         }
 
+        // Check if category exists and is active
+        const category = await ServiceCategory.findById(service_categoryId);
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                message: 'Service category not found'
+            });
+        }
+
+        if (!category.isActive) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot create service in inactive category'
+            });
+        }
+
+        // Create the service
         const service = await Service.create({
-            ...req.body,
+            title,
+            description: description || '',
+            service_categoryId,
+            baseprice,
             isActive: true
         });
 
+        // Fetch the populated service
+        const populatedService = await Service.findById(service._id)
+            .populate('service_categoryId', 'name description icon');
+
         res.status(201).json({
             success: true,
-            data: service,
+            data: populatedService,
             message: 'Service created successfully'
         });
     } catch (error) {
@@ -80,8 +200,7 @@ exports.createService = async (req, res) => {
 exports.getAllServices = async (req, res) => {
     try {
         const services = await Service.find()
-            .populate('category', 'name description')
-            .populate('createdBy', 'name email phone')
+            .populate('service_categoryId', 'name description icon')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -105,8 +224,7 @@ exports.getAllServices = async (req, res) => {
 exports.getServiceById = async (req, res) => {
     try {
         const service = await Service.findById(req.params.id)
-            .populate('category', 'name description')
-            .populate('createdBy', 'name email phone');
+            .populate('service_categoryId', 'name description icon');
 
         if (!service) {
             return res.status(404).json({
@@ -131,7 +249,7 @@ exports.getServiceById = async (req, res) => {
 
 // @desc    Update service
 // @route   PUT /api/services/:id
-// @access  Private (Worker only)
+// @access  Private (Admin only)
 exports.updateService = async (req, res) => {
     try {
         let service = await Service.findById(req.params.id);
@@ -143,19 +261,36 @@ exports.updateService = async (req, res) => {
             });
         }
 
-        // Check if the logged-in user is the service creator
-        if (service.createdBy.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
+        // Validate base price if it's being updated
+        if (req.body.baseprice && req.body.baseprice <= 0) {
+            return res.status(400).json({
                 success: false,
-                message: 'You can only update your own services'
+                message: 'Base price must be greater than 0'
             });
+        }
+
+        // If category is being updated, check if it exists and is active
+        if (req.body.service_categoryId) {
+            const category = await ServiceCategory.findById(req.body.service_categoryId);
+            if (!category) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Service category not found'
+                });
+            }
+            if (!category.isActive) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot update to inactive category'
+                });
+            }
         }
 
         service = await Service.findByIdAndUpdate(
             req.params.id,
             req.body,
             { new: true, runValidators: true }
-        ).populate('category', 'name description');
+        ).populate('service_categoryId', 'name description icon');
 
         res.status(200).json({
             success: true,
@@ -174,7 +309,7 @@ exports.updateService = async (req, res) => {
 
 // @desc    Delete service
 // @route   DELETE /api/services/:id
-// @access  Private (Worker only)
+// @access  Private (Admin only)
 exports.deleteService = async (req, res) => {
     try {
         const service = await Service.findById(req.params.id);
@@ -183,14 +318,6 @@ exports.deleteService = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message: 'Service not found'
-            });
-        }
-
-        // Check if the logged-in user is the service creator
-        if (service.createdBy.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                success: false,
-                message: 'You can only delete your own services'
             });
         }
 
@@ -209,78 +336,4 @@ exports.deleteService = async (req, res) => {
         });
     }
 };
-exports.getAllServices = async (req, res) => {
-  try {
-    // Optionally you can add filtering by query params here.
-    const services = await Service.find({ isActive: true })
-      .populate('categoryId createdBy'); // populate referenced fields if needed
 
-    return res.status(200).json(services);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-/**
- * Get a service by id.
- * Public endpoint.
- */
-exports.getServiceById = async (req, res) => {
-  try {
-    const service = await Service.findById(req.params.id)
-      .populate('categoryId createdBy');
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found.' });
-    }
-    return res.status(200).json(service);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-/**
- * Update a service.
- * Only the worker who created the service can update it.
- */
-exports.updateService = async (req, res) => {
-  try {
-    const service = await Service.findById(req.params.id);
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found.' });
-    }
-    
-    // Only allow if the logged in worker is the owner of the service
-    if (service.createdBy !== req.user._id) {
-      return res.status(403).json({ message: 'Unauthorized to update this service.' });
-    }
-    
-    // Update with new values
-    const updatedService = await Service.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    return res.status(200).json(updatedService);
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-};
-
-/**
- * Delete a service.
- * Only the worker who created the service can delete it.
- */
-exports.deleteService = async (req, res) => {
-  try {
-    const service = await Service.findById(req.params.id);
-    if (!service) {
-      return res.status(404).json({ message: 'Service not found.' });
-    }
-    
-    // Check if the current worker is the owner
-    if (service.createdBy !== req.user._id) {
-      return res.status(403).json({ message: 'Unauthorized to delete this service.' });
-    }
-    
-    await Service.findByIdAndDelete(req.params.id);
-    return res.status(200).json({ message: 'Service deleted successfully.' });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-};

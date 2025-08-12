@@ -16,9 +16,9 @@ const bookingSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  serviceId: {
+  workerServiceId: {
     type: String,
-    ref: 'Service',
+    ref: 'WorkerService',
     required: true
   },
   address_id:{
@@ -52,7 +52,7 @@ const bookingSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: true
+    // required: true
   },
   createdAt: {
     type: Date,
