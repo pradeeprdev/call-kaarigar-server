@@ -21,7 +21,7 @@ const corsOptions = {
     'http://localhost:8080',    // Flutter web default port
     'http://localhost:8000',    // Alternative Flutter web port
     'capacitor://localhost',    // For mobile apps using Capacitor
-    'https://callkaarigar-admin.vercel.app/',
+    'https://callkaarigar-admin.vercel.app',
     'http://localhost',         // Generic localhost
     'https://callkaarigar.onrender.com',  // Production domain
     'http://callkaarigar.onrender.com'    // Production domain (HTTP)
