@@ -161,3 +161,36 @@ exports.deleteCategory = async (req, res) => {
         });
     }
 };
+
+// @desc    Toggle service category status
+// @route   PATCH /api/service-categories/:id/toggle
+// @access  Private (Admin only)
+exports.toggleCategoryStatus = async (req, res) => {
+    try {
+        const category = await ServiceCategory.findById(req.params.id);
+
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                message: 'Service category not found'
+            });
+        }
+
+        // Toggle the isActive status
+        category.isActive = !category.isActive;
+        await category.save();
+
+        res.status(200).json({
+            success: true,
+            data: category,
+            message: `Service category ${category.isActive ? 'activated' : 'deactivated'} successfully`
+        });
+    } catch (error) {
+        console.error('Toggle category status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error toggling service category status',
+            error: error.message
+        });
+    }
+};

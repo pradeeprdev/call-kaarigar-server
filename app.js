@@ -22,7 +22,9 @@ const corsOptions = {
     'capacitor://localhost',    // For mobile apps using Capacitor
     'http://localhost',         // Generic localhost
     'https://callkaarigar.onrender.com',  // Production domain
-    'http://callkaarigar.onrender.com'    // Production domain (HTTP)
+    'http://callkaarigar.onrender.com',    // Production domain (HTTP)
+    'http://call-karigar-backend.onrender.com/',
+    'https://call-karigar-backend.onrender.com/'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
@@ -88,7 +90,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/customer-profiles', customerProfileRoutes);
-app.use('/api/worker-profiles', workerProfileRoutes);
+app.use('/api/worker-profile', workerProfileRoutes);
 app.use('/api/worker-documents', workerDocumentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
