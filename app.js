@@ -13,19 +13,38 @@ dotenv.config();
 const app = express();
 
 // CORS Configuration
+// All specific domains
+// const corsOptions = {
+//   origin: [
+//     '*',
+//     'http://localhost:3000',    // React development server
+//     'http://localhost:3001',    // Alternative React port
+//     'http://localhost:5173',    // Alternative React port
+//     'http://localhost:8080',    // Flutter web default port
+//     'http://localhost:8000',    // Alternative Flutter web port
+//     'capacitor://localhost',    // For mobile apps using Capacitor
+//     'https://callkaarigar-admin.vercel.app',
+//     'http://localhost',         // Generic localhost
+//     'https://callkaarigar.onrender.com',  // Production domain
+//     'http://callkaarigar.onrender.com'    // Production domain (HTTP)
+//   ],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+//   allowedHeaders: [
+//     'Content-Type',
+//     'Authorization',
+//     'X-Requested-With',
+//     'Accept',
+//     'Origin'
+//   ],
+//   credentials: true,  // Allow credentials (cookies, authorization headers, etc)
+//   maxAge: 86400      // Cache preflight request results for 24 hours
+// };
+
+// allow all 
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',    // React development server
-    'http://localhost:3001',    // Alternative React port
-    'http://localhost:5173',    // Alternative React port
-    'http://localhost:8080',    // Flutter web default port
-    'http://localhost:8000',    // Alternative Flutter web port
-    'capacitor://localhost',    // For mobile apps using Capacitor
-    'https://callkaarigar-admin.vercel.app',
-    'http://localhost',         // Generic localhost
-    'https://callkaarigar.onrender.com',  // Production domain
-    'http://callkaarigar.onrender.com'    // Production domain (HTTP)
-  ],
+  origin: (origin, callback) => {
+    callback(null, true); // allow all origins dynamically
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
@@ -34,8 +53,8 @@ const corsOptions = {
     'Accept',
     'Origin'
   ],
-  credentials: true,  // Allow credentials (cookies, authorization headers, etc)
-  maxAge: 86400      // Cache preflight request results for 24 hours
+  credentials: true,
+  maxAge: 86400
 };
 
 // Security middleware
