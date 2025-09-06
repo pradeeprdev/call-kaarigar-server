@@ -2,10 +2,10 @@
   "name": "call-kaarigar-server",
   "version": "1.0.0",
   "description": "Backend services for the Call Karigar platform — managing user authentication, service provider listings, bookings, and admin controls. Built with Nodejs, Express, MongoDB, this API supports both user and admin interfaces.",
-  "main": "index.js",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
   },
   "repository": {
     "type": "git",
