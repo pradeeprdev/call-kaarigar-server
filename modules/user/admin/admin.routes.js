@@ -5,8 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { protect, authorize } = require('../../../middleware/auth');
 
-// Ensure upload directory exists
-const uploadDir = 'public/uploads/admin';
+const uploadDir = '/tmp/admin';
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
