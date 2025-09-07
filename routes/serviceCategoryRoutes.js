@@ -5,7 +5,8 @@ const {
     getCategories,
     getCategoryById,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    toggleCategoryStatus
 } = require('../controllers/serviceCategoryController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -20,5 +21,6 @@ router.use(authorize('admin'));
 router.post('/', createCategory);
 router.put('/:id', updateCategory);
 router.delete('/:id', deleteCategory);
+router.patch('/:id/toggle', toggleCategoryStatus);
 
 module.exports = router;

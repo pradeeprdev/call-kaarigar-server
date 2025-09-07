@@ -1,4 +1,32 @@
 const validator = require('validator');
+const { validationResult } = require('express-validator');
+
+// Middleware to check express-validator validation results
+exports.validateRequest = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        // Get only the first error for each field
+        const uniqueErrors = {};
+        errors.array().forEach(error => {
+            if (!uniqueErrors[error.path]) {
+                uniqueErrors[error.path] = error.msg;
+            }
+        });
+
+        // Convert to array format
+        const formattedErrors = Object.entries(uniqueErrors).map(([field, message]) => ({
+            field,
+            message
+        }));
+
+        return res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: formattedErrors
+        });
+    }
+    next();
+};
 
 exports.validateRegistration = (req, res, next) => {
     const { name, email, phone, password, role } = req.body;
@@ -73,20 +101,33 @@ exports.validateService = (req, res, next) => {
 };
 
 exports.validateLogin = (req, res, next) => {
-    const { email, password } = req.body;
-    const errors = [];
+  const { email, phone, password } = req.body;
+  const errors = [];
 
-    if (!email || !validator.isEmail(email)) {
-        errors.push('Please provide a valid email address');
-    }
+  // Check if either email or phone is provided
+  if (!email && !phone) {
+    errors.push('Email or phone number is required');
+  }
 
-    if (!password) {
-        errors.push('Password is required');
-    }
+  // If email is provided, validate it
+  if (email && !validator.isEmail(email)) {
+    errors.push('Please provide a valid email address');
+  }
 
-    if (errors.length > 0) {
-        return res.status(400).json({ message: 'Validation failed', errors });
-    }
+  // If phone is provided, validate it
+  if (phone && !validator.isMobilePhone(phone)) {
+    errors.push('Please provide a valid phone number');
+  }
 
-    next();
+  // Password is always required
+  if (!password) {
+    errors.push('Password is required');
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ message: 'Validation failed', errors });
+  }
+
+  next();
 };
+
