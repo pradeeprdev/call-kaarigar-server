@@ -27,12 +27,12 @@ const couponRoutes = require('./modules/coupon/coupon.routes');
 const serviceRequestRoutes = require('./modules/serviceRequest/serviceRequest.routes');
 
 // Mount routes
-app.use('/api/coupons', couponRoutes);
-app.use('/api/service-requests', serviceRequestRoutes);
 
 // CORS Configuration
 const corsOptions = {
-  origin: '*',  // Allow all origins - WARNING: This should be properly restricted in production,
+  origin: function(origin, callback) {
+    callback(null, true); // allow all origins - regardless of port
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
@@ -42,8 +42,21 @@ const corsOptions = {
     'Origin',
   ],
   credentials: true,  // Allow credentials (cookies, authorization headers, etc)
-  maxAge: 86400      // Cache preflight request results for 24 hours
+  maxAge: 86400,     // Cache preflight request results for 24 hours
+  exposedHeaders: ['Content-Range', 'X-Content-Range'] // Allow these headers to be exposed
 };
+
+// Allow the frontend origin (e.g., React app running on port 3000)
+// In a production environment, replace '*' with your actual frontend domain
+corsOptions.origin = (origin, callback) => {
+  if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
+    callback(null, true);
+  } else {
+    callback(new Error('Not allowed by CORS by the CORS policy'));
+  }
+};
+
+
 
 // Security middleware with configurations for static files
 app.use(helmet({
@@ -67,7 +80,7 @@ app.use(helmet({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 5000 // limit each IP to 5000 requests per windowMs
 });
 
 // Apply rate limiting to API routes only
@@ -79,33 +92,29 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Limit JSON body size
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
-const publicPath = path.resolve(__dirname, 'public');
-console.log('Public directory absolute path:', publicPath);
-app.use(express.static(publicPath));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'tmp/uploads')));
 
 // Serve HTML files for different roles
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(publicPath, 'login.html'));
+  res.sendFile(path.join(publicPath, 'login.html'));
 });
 
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(publicPath, 'register.html'));
+  res.sendFile(path.join(publicPath, 'register.html'));
 });
 
 app.get('/admin/dashboard', (req, res) => {
-    res.sendFile(path.join(publicPath, 'admin/dashboard.html'));
+  res.sendFile(path.join(publicPath, 'admin/dashboard.html'));
 });
 
 app.get('/customer/dashboard', (req, res) => {
-    res.sendFile(path.join(publicPath, 'customer/dashboard.html'));
+  res.sendFile(path.join(publicPath, 'customer/dashboard.html'));
 });
 
 app.get('/worker/dashboard', (req, res) => {
-    res.sendFile(path.join(publicPath, 'worker/dashboard.html'));
+  res.sendFile(path.join(publicPath, 'worker/dashboard.html'));
 });
 
 // Import routes from modules
@@ -128,6 +137,7 @@ const workerServiceRoutes = require('./modules/user/worker/workerService/workerS
 const bookingRoutes = require('./modules/booking/booking.routes');
 const paymentRoutes = require('./modules/payment/payment.routes');
 const reviewRoutes = require('./modules/review/review.routes');
+const supportTicketRoutes = require('./modules/supportTicket/supportTicket.routes');
 
 // Register API routes
 app.use('/api/auth', authRoutes);
@@ -148,6 +158,7 @@ app.use('/api/customer-profile', customerProfileRoutes);
 app.use('/api/worker-profile', workerProfileRoutes);
 app.use('/api/worker-documents', workerDocumentRoutes);
 app.use('/api/worker-services', workerServiceRoutes);
+app.use('/api/support-tickets', supportTicketRoutes);
 
 // Worker verification routes
 const workerVerificationRoutes = require('./modules/user/worker/workerProfile/workerVerification.routes');
@@ -156,6 +167,8 @@ app.use('/api/admin/workers', workerVerificationRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/service-requests', serviceRequestRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
