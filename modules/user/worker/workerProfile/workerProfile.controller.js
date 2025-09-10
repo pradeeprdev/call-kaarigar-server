@@ -138,7 +138,7 @@ exports.updateWorkerProfile = async (req, res) => {
         }
 
         // Check ownership or admin status
-        if (profile.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+        if (profile._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: 'Not authorized to update this profile'
@@ -165,7 +165,7 @@ exports.updateWorkerProfile = async (req, res) => {
             req.params.id,
             updateData,
             { new: true, runValidators: true }
-        ).populate('userId', 'name email phone')
+        ).populate('_id', 'name email phone')
          .populate('skills', 'name description');
 
         res.status(200).json({
@@ -198,7 +198,7 @@ exports.deleteWorkerProfile = async (req, res) => {
         }
 
         // Check ownership or admin status
-        if (profile.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+        if (profile._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: 'Not authorized to delete this profile'
@@ -236,7 +236,7 @@ exports.updateAvailability = async (req, res) => {
         }
 
         // Check ownership
-        if (profile.userId.toString() !== req.user._id.toString()) {
+        if (profile._id.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
                 message: 'Not authorized to update this profile'
