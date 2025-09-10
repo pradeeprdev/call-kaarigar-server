@@ -7,30 +7,6 @@ const AdminProfile = require('../user/admin/adminProfile.model');
 const NotificationService = require('../../services/notificationService');
 const Address = require('../address/address.model');
 
-// Helper function to generate a unique username from name and email
-const generateUsername = async (user, Model, isWorker = false) => {
-    // Get name and email parts
-    const namePart = user.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const emailPart = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-    
-    // Create base username
-    let baseUsername = `${namePart}.${emailPart}`;
-    if (isWorker) baseUsername += '.pro';
-    
-    // Try the base username first
-    let username = baseUsername;
-    let counter = 1;
-    
-    // Keep trying until we find a unique username
-    while (await Model.findOne({ username })) {
-        username = isWorker ? 
-            `${baseUsername}${counter}` : 
-            `${baseUsername}${counter}`;
-        counter++;
-    }
-
-    return username;
-};
 
 const createBasicProfile = async (user) => {
     let profile = null;
@@ -173,9 +149,6 @@ const getBaseProfileData = (user, addressId = null) => {
         savedAddresses: addressId ? [addressId] : []
     };
 };
-
-// Create initial profile is handled by createBasicProfile function
-// This section is no longer needed as we're creating minimal profiles during registration
 
 // Register a new user
 exports.registerUser = async (req, res) => {
