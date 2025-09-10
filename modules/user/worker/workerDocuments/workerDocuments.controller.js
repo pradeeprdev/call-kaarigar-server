@@ -114,7 +114,7 @@ exports.uploadDocuments = async (req, res) => {
                 await workerDocument.save();
             }
 
-            // Notify admins about new document upload -- for future
+            // Notify admins about new document upload -- for future 
             // const admins = await User.find({ role: 'admin' });
             // for (const admin of admins) {
             //     await NotificationService.createNotification({
