@@ -75,7 +75,7 @@ exports.createWorkerProfile = async (req, res) => {
 exports.getAllWorkerProfiles = async (req, res) => {
     try {
         const profiles = await WorkerProfile.find()
-            .populate('_id', 'name email phone')
+            .populate('_id', 'name email phone') // Populate user details from the _id reference
             .populate('skills', 'name description');
 
         res.status(200).json({

@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Routes
 const couponRoutes = require('./modules/coupon/coupon.routes');
-const serviceRequestRoutes = require('./modules/serviceRequest/serviceRequest.routes');
+// const serviceRequestRoutes = require('./modules/serviceRequest/serviceRequest.routes');
 
 // Mount routes
 
@@ -166,7 +166,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
-app.use('/api/service-requests', serviceRequestRoutes);
+// app.use('/api/service-requests', serviceRequestRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
