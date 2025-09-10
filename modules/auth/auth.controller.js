@@ -30,80 +30,80 @@ const createBasicProfile = async (user) => {
             message = 'Admin registration successful. Please complete your profile.';
             break;
 
-        case 'customer':
-            // Create minimal customer profile
-            const customerProfile = await CustomerProfile.create({
-                userId: user._id,
-                status: 'new',
-                phoneNumber: user.phone,
-                email: user.email,
-                photo: 'default-profile.jpg',
-                bio: '',
-                address: [],
-                savedAddresses: [],
-                savedWorkers: [],
-                preferences: {
-                    language: 'en',
-                    notifications: true,
-                    currency: 'INR',
-                    theme: 'light'
-                },
-                stats: {
-                    totalBookings: 0,
-                    completedBookings: 0,
-                    cancelledBookings: 0,
-                    totalSpent: 0
-                }
-            });
+        // case 'customer':
+        //     // Create minimal customer profile
+        //     const customerProfile = await CustomerProfile.create({
+        //         userId: user._id,
+        //         status: 'new',
+        //         phoneNumber: user.phone,
+        //         email: user.email,
+        //         photo: 'default-profile.jpg',
+        //         bio: '',
+        //         address: '',
+        //         savedAddresses: [],
+        //         savedWorkers: [],
+        //         preferences: {
+        //             language: 'en',
+        //             notifications: true,
+        //             currency: 'INR',
+        //             theme: 'light'
+        //         },
+        //         stats: {
+        //             totalBookings: 0,
+        //             completedBookings: 0,
+        //             cancelledBookings: 0,
+        //             totalSpent: 0
+        //         }
+        //     });
 
-            profile = {
-                _id: customerProfile._id,
-                userId: user._id
-            };
+        //     profile = {
+        //         _id: customerProfile._id,
+        //         userId: user._id
+        //     };
             
-            redirectTo = '/customer/update-profile';
-            message = 'Customer registration successful. Please complete your profile.';
-            break;
+        //     redirectTo = '/customer/update-profile';
+        //     message = 'Customer registration successful. Please complete your profile.';
+        //     break;
 
-        case 'worker':
-            // Generate unique username for worker
-            const username = await generateUsername(user, WorkerProfile, true);
+        // case 'worker':
+        //     // Generate unique username for worker
+        //     const username = await generateUsername(user, WorkerProfile, true);
             
-            // Create worker profile with generated username
-            const workerProfile = await WorkerProfile.create({
-                userId: user._id,
-                username: username,
-                phoneNumber: user.phone,
-                email: user.email,
-                photo: 'default-worker.jpg',
-                bio: 'Hello, I am a new service provider.',
-                skills: [],
-                status: 'pending',
-                isVerified: false,
-                availability: {
-                    isAvailable: false,
-                    schedule: []
-                },
-                preferences: {
-                    language: 'en',
-                    notifications: true,
-                    maxJobRadius: 10,
-                    autoAccept: false
-                },
-                stats: {
-                    totalJobs: 0,
-                    completedJobs: 0,
-                    cancelledJobs: 0,
-                    totalEarnings: 0,
-                    rating: 0,
-                    ratingCount: 0
-                }
-            });
+        //     // Create worker profile with generated username
+        //     const workerProfile = await WorkerProfile.create({
+        //         userId: user._id,
+        //         username: username,
+        //         phoneNumber: user.phone,
+        //         email: user.email,
+        //         photo: 'default-worker.jpg',
+        //         bio: 'Hello, I am a new service provider.',
+        //         skills: [],
+        //         status: 'pending',
+        //         isVerified: false,
+        //         availability: {
+        //             isAvailable: false,
+        //             schedule: []
+        //         },
+        //         preferences: {
+        //             language: 'en',
+        //             notifications: true,
+        //             maxJobRadius: 10,
+        //             autoAccept: false
+        //         },
+        //         stats: {
+        //             totalJobs: 0,
+        //             completedJobs: 0,
+        //             cancelledJobs: 0,
+        //             totalEarnings: 0,
+        //             rating: 0,
+        //             ratingCount: 0
+        //         }
+        //     });
 
-            profile = {
-                _id: workerProfile._id,
-                userId: user._id
-            };
+        //     profile = {
+        //         _id: workerProfile._id,
+        //         userId: user._id
+        //     };
             
             redirectTo = '/worker/update-profile';
             message = 'Worker registration successful. Please complete your profile and verify your documents.';
@@ -111,7 +111,7 @@ const createBasicProfile = async (user) => {
     }
 
     return {
-        profile: { _id: profile.insertedId, userId: user._id },
+        // profile: { _id: profile.insertedId, userId: user._id },
         message,
         redirectTo
     };
@@ -206,7 +206,8 @@ exports.registerUser = async (req, res) => {
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = password;
 
         console.log('Creating new user:', {
             name: name.trim(),
@@ -411,7 +412,7 @@ exports.loginUser = async (req, res) => {
         profile = await Profile.findOne({ userId: user._id });
         console.log('Profile found:', profile ? { 
             _id: profile._id, 
-            username: profile.username,
+            username: profile?.username,
             status: profile.status 
         } : 'No profile found');
 
@@ -463,7 +464,7 @@ exports.loginUser = async (req, res) => {
         // Prepare response based on user role
         // Prepare profile data
         const profileData = profile ? {
-            username: profile.username,
+            username: profile?.username,
             photo: profile.photo || 'default-profile.jpg',
             status: profile.status,
             bio: profile.bio,

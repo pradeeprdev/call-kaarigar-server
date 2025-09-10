@@ -37,11 +37,11 @@ const workerProfileSchema = new mongoose.Schema({
     ref: 'ServiceCategory',
     default: []
   }],
-  address: {
-    type: String,
-    ref: 'Address',
-    default: null
-  },
+  // address: {
+  //   type: String,
+  //   ref: 'Address',
+  //   default: null
+  // },
   status: {
     type: String,
     enum: ['pending', 'active', 'inactive', 'suspended'],

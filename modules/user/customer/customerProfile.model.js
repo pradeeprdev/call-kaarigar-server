@@ -9,7 +9,6 @@ const customerProfileSchema = new mongoose.Schema({
   },
   username: {
     type: String,
-    trim: true,
     sparse: true  // Allow null values initially
   },
   phoneNumber: {
@@ -28,10 +27,10 @@ const customerProfileSchema = new mongoose.Schema({
     type: String,
     default: 'default-profile.jpg'
   },
-  address: [{  // Changed to array of addresses
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Address'
-  }],
+  address: {  // Changed to array of addresses
+    type: String,
+    ref: 'Address',
+  },
   bio: {
     type: String,
     trim: true,
