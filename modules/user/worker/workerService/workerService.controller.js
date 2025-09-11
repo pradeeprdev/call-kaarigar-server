@@ -28,7 +28,7 @@ exports.addWorkerService = async (req, res) => {
         }
 
         // Check if worker profile exists
-        const workerProfile = await WorkerProfile.findOne({ userId: req.user._id });
+        const workerProfile = await WorkerProfile.findOne({ _id: req.user._id });
         if (!workerProfile) {
             return res.status(404).json({
                 success: false,

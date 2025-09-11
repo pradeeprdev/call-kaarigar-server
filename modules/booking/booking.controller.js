@@ -536,13 +536,15 @@ exports.updateBooking = async (req, res) => {
         }
 
         // Check authorization
-        if (req.user.role !== 'admin' && 
+        console.log("user hhhhhaaaaaa:", req.user);
+        if (req.user.role !== 'admin' &&
             req.user._id.toString() !== booking.customerId.toString() && 
             req.user._id.toString() !== booking.workerId.toString()) {
             return res.status(403).json({
                 success: false,
                 message: 'Not authorized to update this booking'
             });
+
         }
 
         booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
