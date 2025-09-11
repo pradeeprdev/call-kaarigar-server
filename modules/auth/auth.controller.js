@@ -29,7 +29,6 @@ const createBasicProfile = async (user) => {
             redirectTo = '/admin/update-profile';
             message = 'Admin registration successful. Please complete your profile.';
             break;
-
         case 'customer':
             // Create minimal customer profile
             const customerProfile = await CustomerProfile.create({
@@ -52,16 +51,6 @@ const createBasicProfile = async (user) => {
                     totalSpent: 0
                 }
             });
-
-            profile = {
-                _id: customerProfile._id,
-                userId: user._id
-            };
-            
-            redirectTo = '/customer/update-profile';
-            message = 'Customer registration successful. Please complete your profile.';
-            break;
-
         case 'worker':
             // Create worker profile
             const workerProfile = await WorkerProfile.create({
@@ -92,11 +81,6 @@ const createBasicProfile = async (user) => {
                     ratingCount: 0
                 }
             });
-
-            profile = {
-                _id: workerProfile._id,
-                userId: user._id
-            };
             
             redirectTo = '/worker/update-profile';
             message = 'Worker registration successful. Please complete your profile and verify your documents.';
@@ -104,7 +88,7 @@ const createBasicProfile = async (user) => {
     }
 
     return {
-        profile: { _id: profile.insertedId, userId: user._id },
+        // profile: { _id: profile.insertedId, userId: user._id },
         message,
         redirectTo
     };
@@ -197,6 +181,10 @@ exports.registerUser = async (req, res) => {
             });
         }
 
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        // const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = password;
         console.log('Creating new user:', {
             name: name.trim(),
             email: normalizedEmail,
@@ -405,7 +393,7 @@ exports.loginUser = async (req, res) => {
         console.log('Looking for profile with role:', user.role);
         profile = await Profile.findOne({ userId: user._id });
         console.log('Profile found:', profile ? { 
-            _id: profile._id, 
+            _id: profile._id,
             status: profile.status 
         } : 'No profile found');
 

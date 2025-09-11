@@ -7,6 +7,7 @@ const customerProfileSchema = new mongoose.Schema({
     required: true,
     unique: true  // Each user can have only one customer profile
   },
+
   phoneNumber: {
     type: String,
     match: [/^\d{10}$/, 'Phone number must be 10 digits'],
@@ -23,7 +24,7 @@ const customerProfileSchema = new mongoose.Schema({
     type: String,
     default: 'default-profile.jpg'
   },
-  address: [{  // Array of address references
+  address: [{  // Changed to array of addresses
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Address'
   }],
