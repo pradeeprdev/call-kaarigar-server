@@ -39,9 +39,6 @@ const createBasicProfile = async (user) => {
                 email: user.email,
                 photo: 'default-profile.jpg',
                 bio: '',
-                address: [],
-                savedAddresses: [],
-                savedWorkers: [],
                 preferences: {
                     language: 'en',
                     notifications: true,
@@ -66,13 +63,9 @@ const createBasicProfile = async (user) => {
             break;
 
         case 'worker':
-            // Generate unique username for worker
-            const username = await generateUsername(user, WorkerProfile, true);
-            
-            // Create worker profile with generated username
+            // Create worker profile
             const workerProfile = await WorkerProfile.create({
-                userId: user._id,
-                username: username,
+                _id: user._id,
                 phoneNumber: user.phone,
                 email: user.email,
                 photo: 'default-worker.jpg',
@@ -204,10 +197,6 @@ exports.registerUser = async (req, res) => {
             });
         }
 
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         console.log('Creating new user:', {
             name: name.trim(),
             email: normalizedEmail,
@@ -215,12 +204,12 @@ exports.registerUser = async (req, res) => {
             role: role || 'customer'
         });
 
-        // Create user with hashed password using create method
+        // Create user (password will be hashed by the model's pre-save middleware)
         const user = await User.create({
             name: name.trim(),
             email: normalizedEmail,
             phone: normalizedPhone,
-            password: hashedPassword,
+            password: password,
             role: role || 'customer',
             status: 'active',
             isPhoneVerified: false,
@@ -305,7 +294,10 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     try {
         console.log('Login attempt:', { ...req.body, password: '***' });
-        const { identifier, password } = req.body;
+        const { identifier, password: rawPassword } = req.body;
+        
+        // Clean and normalize the password
+        const password = rawPassword ? rawPassword.trim() : '';
         
         // Validate input
         if (!identifier || !password) {
@@ -371,8 +363,11 @@ exports.loginUser = async (req, res) => {
         // Check password
         console.log('Comparing password for user:', user._id);
         try {
-            const isMatch = await bcrypt.compare(password, user.password);
-            console.log('Password match result:', isMatch);
+            console.log('Login - Attempting password comparison');
+            
+            // Use the model's comparePassword method
+            const isMatch = await user.comparePassword(password);
+            console.log('Login - Password match result:', isMatch);
             
             if (!isMatch) {
                 return res.status(401).json({
@@ -411,7 +406,6 @@ exports.loginUser = async (req, res) => {
         profile = await Profile.findOne({ userId: user._id });
         console.log('Profile found:', profile ? { 
             _id: profile._id, 
-            username: profile.username,
             status: profile.status 
         } : 'No profile found');
 
@@ -463,7 +457,6 @@ exports.loginUser = async (req, res) => {
         // Prepare response based on user role
         // Prepare profile data
         const profileData = profile ? {
-            username: profile.username,
             photo: profile.photo || 'default-profile.jpg',
             status: profile.status,
             bio: profile.bio,
@@ -494,7 +487,6 @@ exports.loginUser = async (req, res) => {
                     createdAt: user.createdAt,
                     isEmailVerified: user.isEmailVerified || false,
                     isPhoneVerified: user.isPhoneVerified || false,
-                    username: profile?.username
                 },
                 profile: profileData,
                 addresses: addresses,

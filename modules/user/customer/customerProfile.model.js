@@ -7,11 +7,6 @@ const customerProfileSchema = new mongoose.Schema({
     required: true,
     unique: true  // Each user can have only one customer profile
   },
-  username: {
-    type: String,
-    trim: true,
-    sparse: true  // Allow null values initially
-  },
   phoneNumber: {
     type: String,
     match: [/^\d{10}$/, 'Phone number must be 10 digits'],
@@ -28,7 +23,7 @@ const customerProfileSchema = new mongoose.Schema({
     type: String,
     default: 'default-profile.jpg'
   },
-  address: [{  // Changed to array of addresses
+  address: [{  // Array of address references
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Address'
   }],
@@ -118,4 +113,13 @@ customerProfileSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('CustomerProfile', customerProfileSchema);
+// Create a model from the schema
+const CustomerProfile = mongoose.model('CustomerProfile', customerProfileSchema);
+
+// Drop all indexes and recreate only the necessary ones
+CustomerProfile.collection.dropIndexes().catch(() => {});
+
+// Create required indexes
+CustomerProfile.collection.createIndex({ userId: 1 }, { unique: true }).catch(() => {});
+
+module.exports = CustomerProfile;

@@ -1,6 +1,5 @@
 const WorkerProfile = require('./workerProfile.model');
 const User = require('../../user.model');
-const { generateUniqueUsername } = require('../../../../utils/usernameGenerator');
 
 // @desc    Create worker profile
 // @route   POST /api/worker-profile
@@ -33,21 +32,8 @@ exports.createWorkerProfile = async (req, res) => {
             });
         }
 
-        // Generate unique username
-        const username = await generateUniqueUsername('worker', user.name);
-
-        // Validate required fields
-        const { photo, bio, skills } = req.body;
-        if (!photo) {
-            return res.status(400).json({
-                success: false,
-                message: 'Profile photo is required'
-            });
-        }
-
         const profile = await WorkerProfile.create({
             _id: req.user._id, // Use the user's UUID as the profile ID
-            username,
             photo,
             bio,
             skills,

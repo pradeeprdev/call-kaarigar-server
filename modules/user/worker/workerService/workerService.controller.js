@@ -161,7 +161,6 @@ exports.getServiceWorkers = async (req, res) => {
                     bio: profile.bio || '',
                     skills: profile.skills || [],
                     photo: profile.photo || 'default.jpg',
-                    username: profile.username,
                     rating: profile.rating || 0,
                     availability: profile.availability || []
                 },
