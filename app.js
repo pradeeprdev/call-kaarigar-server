@@ -24,6 +24,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Routes
 const couponRoutes = require('./modules/coupon/coupon.routes');
+const workerIndependentServiceRoutes = require('./modules/user/worker/workerService/workerIndependentService/workerIndependentService.routes');
 // const serviceRequestRoutes = require('./modules/serviceRequest/serviceRequest.routes');
 
 // Mount routes
@@ -136,6 +137,9 @@ const bookingRoutes = require('./modules/booking/booking.routes');
 const paymentRoutes = require('./modules/payment/payment.routes');
 const reviewRoutes = require('./modules/review/review.routes');
 const supportTicketRoutes = require('./modules/supportTicket/supportTicket.routes');
+
+// Register independent service routes
+app.use('/api', workerIndependentServiceRoutes);
 
 // Register API routes
 app.use('/api/auth', authRoutes);
