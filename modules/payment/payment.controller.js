@@ -1,6 +1,71 @@
 const Payment = require('./payment.model');
 const paymentService = require('./payment.service');
 const Booking = require('../booking/booking.model');
+const NotificationService = require('../../services/notificationService');
+
+// Verify and update payment after frontend Razorpay success
+exports.verifyPayment = async (req, res) => {
+    try {
+        const { 
+            paymentId,  // Our internal payment ID
+            razorpayPaymentId, 
+            razorpayOrderId, 
+            razorpaySignature 
+        } = req.body;
+
+        // Find the payment record
+        const payment = await Payment.findById(paymentId);
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Payment not found'
+            });
+        }
+
+        // Update payment status and gateway response
+        payment.status = 'completed';
+        payment.transactionId = razorpayPaymentId;
+        payment.gatewayResponse = {
+            razorpayPaymentId,
+            razorpayOrderId,
+            razorpaySignature
+        };
+        await payment.save();
+
+        // Update booking status
+        const booking = await Booking.findById(payment.bookingId);
+        if (booking) {
+            booking.paymentStatus = 'paid';
+            await booking.save();
+        }
+
+        // Send notifications
+        await NotificationService.sendNotification({
+            userId: payment.customerId,
+            type: 'payment_completed',
+            title: 'Payment Successful',
+            message: `Your payment of ₹${payment.amount} has been completed successfully.`,
+            metadata: {
+                bookingId: payment.bookingId,
+                paymentId: payment._id
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Payment verified successfully',
+            data: payment
+        });
+
+    } catch (error) {
+        console.error('Payment verification error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error verifying payment',
+            error: error.message
+        });
+    }
+};
 
 exports.createPayment = async (req, res) => {
     try {
@@ -26,11 +91,30 @@ exports.createPayment = async (req, res) => {
             status: 'pending'
         });
 
-        // Create order in payment gateway if not cash payment
+        // For non-cash payments, create a pending payment record
         if (paymentGateway !== 'cash') {
-            const order = await paymentService.createPaymentOrder(amount);
-            payment.metadata = { orderId: order.id };
+            payment.metadata = {
+                bookingId: booking.id,
+                amount: amount * 100, // Amount in paise for Razorpay
+                currency: 'INR'
+            };
             await payment.save();
+
+            return res.status(201).json({
+                success: true,
+                data: {
+                    payment,
+                    paymentDetails: {
+                        amount: amount * 100, // Amount in paise
+                        currency: 'INR',
+                        name: 'Call Karigar Service',
+                        description: `Payment for booking #${booking.id}`,
+                        customerId: booking.customerId,
+                        bookingId: booking.id,
+                        paymentId: payment._id
+                    }
+                }
+            });
         }
 
         // Create notification for customer

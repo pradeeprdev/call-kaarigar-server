@@ -6,6 +6,11 @@ const PaymentSchema = new mongoose.Schema({
         ref: 'Booking',
         required: true
     },
+    transactionId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
     customerId: {
         type: String,
         ref: 'User',
@@ -30,11 +35,6 @@ const PaymentSchema = new mongoose.Schema({
         enum: ['pending', 'processing', 'completed', 'failed', 'refunded'],
         default: 'pending'
     },
-    transactionId: {
-        type: String,
-        unique: true,
-        sparse: true
-    },
     paymentGateway: {
         type: String,
         enum: ['razorpay', 'stripe', 'paytm', 'cash'],
@@ -47,6 +47,10 @@ const PaymentSchema = new mongoose.Schema({
         type: String,
         unique: true,
         sparse: true
+    },
+    metadata: {
+        type: Object,
+        default: {}
     },
     refundReason: {
         type: String

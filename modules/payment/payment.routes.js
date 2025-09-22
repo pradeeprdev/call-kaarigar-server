@@ -26,6 +26,7 @@ router.get('/worker', authorize('worker'), getWorkerPayments);
 
 // Mixed access routes
 router.post('/', createPayment);
+// router.post('/verify', verifyPayment);  // New endpoint for payment verification
 router.get('/:id', getPaymentById);
 router.get('/:id/status', getPaymentStatus);
 router.put('/:id', updatePayment);

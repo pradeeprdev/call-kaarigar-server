@@ -26,6 +26,7 @@ router.get('/customer', authorize('customer'), getCustomerBookings);
 // Worker routes
 router.get('/worker', authorize('worker'), getWorkerBookings);
 router.post('/:bookingId/handle-request', authorize('worker'), handleBookingRequest);
+router.post('/:bookingId/complete', authorize('worker'), require('./booking.complete.controller').completeBooking);
 
 // Mixed access routes
 router.get('/:id', getBooking);
