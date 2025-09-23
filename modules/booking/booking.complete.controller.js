@@ -23,12 +23,12 @@ exports.completeBooking = async (req, res) => {
         }
 
         // Check if booking can be completed
-        if (booking.status !== 'in-progress') {
-            return res.status(400).json({
-                success: false,
-                message: `Booking cannot be completed. Current status: ${booking.status}`
-            });
-        }
+        // if (booking.status !== 'in-progress') {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: `Booking cannot be completed. Current status: ${booking.status}`
+        //     });
+        // }
 
         // Update booking status
         booking.status = 'completed';
