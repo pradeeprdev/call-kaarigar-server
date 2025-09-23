@@ -69,7 +69,7 @@ exports.verifyPayment = async (req, res) => {
 
 exports.createPayment = async (req, res) => {
     try {
-        const { bookingId, amount, paymentMethod, paymentGateway } = req.body;
+        const { bookingId, totalAmount,amount, paymentMethod, paymentGateway } = req.body;
 
         // Find the booking
         const booking = await Booking.findById(bookingId);
@@ -85,7 +85,7 @@ exports.createPayment = async (req, res) => {
             bookingId,
             customerId: booking.customerId,
             workerId: booking.workerId,
-            amount,
+            amount:booking.totalAmount,
             paymentMethod,
             paymentGateway,
             status: 'pending'
@@ -95,7 +95,7 @@ exports.createPayment = async (req, res) => {
         if (paymentGateway !== 'cash') {
             payment.metadata = {
                 bookingId: booking.id,
-                amount: amount * 100, // Amount in paise for Razorpay
+                amount: booking.totalAmount, // Amount in paise for Razorpay
                 currency: 'INR'
             };
             await payment.save();
@@ -105,7 +105,7 @@ exports.createPayment = async (req, res) => {
                 data: {
                     payment,
                     paymentDetails: {
-                        amount: amount * 100, // Amount in paise
+                        amount: booking.totalAmount, // Amount in paise
                         currency: 'INR',
                         name: 'Call Karigar Service',
                         description: `Payment for booking #${booking.id}`,
