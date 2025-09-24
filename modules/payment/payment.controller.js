@@ -51,16 +51,16 @@ exports.verifyPayment = async (req, res) => {
         }
 
         // Send notifications
-        await NotificationService.sendNotification({
-            userId: payment.customerId,
-            type: 'payment_completed',
-            title: 'Payment Successful',
-            message: `Your payment of ₹${payment.amount} has been completed successfully.`,
-            metadata: {
-                bookingId: payment.bookingId,
-                paymentId: payment._id
-            }
-        });
+        // await NotificationService.sendNotification({
+        //     userId: payment.customerId,
+        //     type: 'payment_completed',
+        //     title: 'Payment Successful',
+        //     message: `Your payment of ₹${payment.amount} has been completed successfully.`,
+        //     metadata: {
+        //         bookingId: payment.bookingId,
+        //         paymentId: payment._id
+        //     }
+        // });
 
         return res.status(200).json({
             success: true,
@@ -227,14 +227,65 @@ exports.getCustomerPayments = async (req, res) => {
 exports.getWorkerPayments = async (req, res) => {
     try {
         const payments = await Payment.find({ workerId: req.user._id })
-            .populate('customerId', 'name email')
-            .populate('bookingId')
+            .populate('customerId', 'name email phone')
+            .populate({
+                path: 'workerId',
+                select: 'name email phone services',
+                populate: {
+                    path: 'services',
+                    select: 'serviceName serviceDescription price'
+                }
+            })
+            .populate({
+                path: 'bookingId',
+                populate: [
+                    {
+                        path: 'serviceId',
+                        select: 'serviceName serviceDescription price'
+                    },
+                    {
+                        path: 'address',
+                        select: 'addressLine1 addressLine2 city state pincode'
+                    }
+                ]
+            })
             .sort({ createdAt: -1 });
+
+        // Format the response data
+        const formattedPayments = payments.map(payment => ({
+            paymentId: payment._id,
+            amount: payment.amount,
+            status: payment.status,
+            paymentMethod: payment.paymentMethod,
+            transactionId: payment.transactionId,
+            createdAt: payment.createdAt,
+            customer: {
+                id: payment.customerId._id,
+                name: payment.customerId.name,
+                email: payment.customerId.email,
+                phone: payment.customerId.phone
+            },
+            worker: {
+                id: payment.workerId._id,
+                name: payment.workerId.name,
+                email: payment.workerId.email,
+                phone: payment.workerId.phone,
+                services: payment.workerId.services
+            },
+            booking: {
+                id: payment.bookingId._id,
+                service: payment.bookingId.serviceId,
+                address: payment.bookingId.address,
+                status: payment.bookingId.status,
+                scheduledDate: payment.bookingId.scheduledDate,
+                totalAmount: payment.bookingId.totalAmount
+            }
+        }));
 
         res.status(200).json({
             success: true,
             count: payments.length,
-            data: payments
+            data: formattedPayments
         });
     } catch (error) {
         console.error('Get worker payments error:', error);
