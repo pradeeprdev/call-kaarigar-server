@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 
 const PaymentSchema = new mongoose.Schema({
     bookingId: {
@@ -6,7 +7,12 @@ const PaymentSchema = new mongoose.Schema({
         ref: 'Booking',
         required: true
     },
-    transactionId: {
+    paymentId: {
+        type: String,
+        unique: true,
+        default: uuidv4,
+    },
+    transactionId: { // will generate from from frontend
         type: String,
         unique: true,
         sparse: true

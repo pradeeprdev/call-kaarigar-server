@@ -1,5 +1,5 @@
 const Payment = require('./payment.model');
-const paymentService = require('./payment.service');
+// const paymentService = require('./payment.service');
 const Booking = require('../booking/booking.model');
 const NotificationService = require('../../services/notificationService');
 
@@ -69,7 +69,7 @@ exports.verifyPayment = async (req, res) => {
 
 exports.createPayment = async (req, res) => {
     try {
-        const { bookingId, totalAmount,amount, paymentMethod, paymentGateway } = req.body;
+        const { bookingId, totalAmount, paymentMethod, paymentGateway } = req.body;
 
         // Find the booking
         const booking = await Booking.findById(bookingId);
@@ -111,7 +111,7 @@ exports.createPayment = async (req, res) => {
                         description: `Payment for booking #${booking.id}`,
                         customerId: booking.customerId,
                         bookingId: booking.id,
-                        paymentId: payment._id
+                        paymentId: payment._id.toString()
                     }
                 }
             });
