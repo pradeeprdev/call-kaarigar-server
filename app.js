@@ -62,9 +62,8 @@ corsOptions.origin = (origin, callback) => {
     if (!origin || (match && allowedPorts.includes(Number(match[1])))) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS policy'));
+      callback(new Error('Not allowed by CORS policy made by dheeraj'));
     }
-  }
 };
 
 
