@@ -21,6 +21,21 @@ exports.verifyPayment = async (req, res) => {
             });
         }
 
+                // Allow test transactions in development environment
+        const isTestTransaction = process.env.NODE_ENV === 'development' && 
+            transactionId.startsWith('test_');
+
+        // Validate transaction ID in production
+        if (!isTestTransaction && process.env.NODE_ENV === 'production') {
+            // In production, you might want to add additional validation here
+            if (!transactionId || transactionId.length < 8) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid transaction ID'
+                });
+            }
+        }
+
         // Update payment status and transaction details
         payment.status = 'completed';
         payment.transactionId = transactionId;
