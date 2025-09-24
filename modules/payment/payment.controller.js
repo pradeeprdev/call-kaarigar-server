@@ -1,16 +1,15 @@
 const Payment = require('./payment.model');
-// const paymentService = require('./payment.service');
 const Booking = require('../booking/booking.model');
 const NotificationService = require('../../services/notificationService');
 
-// Verify and update payment after frontend Razorpay success
+// Update payment status after successful frontend payment
 exports.verifyPayment = async (req, res) => {
     try {
         const { 
-            paymentId,  // Our internal payment ID
-            razorpayPaymentId, 
-            razorpayOrderId, 
-            razorpaySignature 
+            paymentId,      // Our internal payment ID
+            transactionId,  // Payment gateway transaction ID
+            paymentMethod,  // Payment method used
+            paymentGateway  // Payment gateway used
         } = req.body;
 
         // Find the payment record
@@ -22,14 +21,11 @@ exports.verifyPayment = async (req, res) => {
             });
         }
 
-        // Update payment status and gateway response
+        // Update payment status and transaction details
         payment.status = 'completed';
-        payment.transactionId = razorpayPaymentId;
-        payment.gatewayResponse = {
-            razorpayPaymentId,
-            razorpayOrderId,
-            razorpaySignature
-        };
+        payment.transactionId = transactionId;
+        payment.paymentMethod = paymentMethod;
+        payment.paymentGateway = paymentGateway;
         await payment.save();
 
         // Update booking status
@@ -69,7 +65,7 @@ exports.verifyPayment = async (req, res) => {
 
 exports.createPayment = async (req, res) => {
     try {
-        const { bookingId, totalAmount, paymentMethod, paymentGateway } = req.body;
+        const { bookingId, paymentMethod, paymentGateway } = req.body;
 
         // Find the booking
         const booking = await Booking.findById(bookingId);
@@ -85,49 +81,47 @@ exports.createPayment = async (req, res) => {
             bookingId,
             customerId: booking.customerId,
             workerId: booking.workerId,
-            amount:booking.totalAmount,
+            amount: booking.totalAmount,
             paymentMethod,
             paymentGateway,
             status: 'pending'
         });
 
-        // For non-cash payments, create a pending payment record
-        if (paymentGateway !== 'cash') {
-            payment.metadata = {
-                bookingId: booking.id,
-                amount: booking.totalAmount, // Amount in paise for Razorpay
-                currency: 'INR'
-            };
-            await payment.save();
+        // Store basic payment metadata
+        payment.metadata = {
+            bookingId: booking.id,
+            amount: booking.totalAmount,
+            currency: 'INR'
+        };
+        await payment.save();
 
-            return res.status(201).json({
-                success: true,
-                data: {
-                    payment,
-                    paymentDetails: {
-                        amount: booking.totalAmount, // Amount in paise
-                        currency: 'INR',
-                        name: 'Call Karigar Service',
-                        description: `Payment for booking #${booking.id}`,
-                        customerId: booking.customerId,
-                        bookingId: booking.id,
-                        paymentId: payment._id.toString()
-                    }
-                }
-            });
-        }
+        // Send notification using NotificationService will implement in future
+        // await NotificationService.sendNotification({
+        //     userId: payment.customerId,
+        //     type: 'payment_initiated',
+        //     title: 'Payment Initiated',
+        //     message: `Payment of ₹${payment.amount} has been initiated for your booking.`,
+        //     metadata: {
+        //         bookingId: payment.bookingId,
+        //         paymentId: payment._id
+        //     }
+        // });
 
-        // Create notification for customer
-        await paymentService.createPaymentNotification(
-            payment,
-            paymentService.NOTIFICATION_TYPES.PAYMENT_INITIATED,
-            payment.customerId,
-            'customer'
-        );
-
-        res.status(201).json({
+        // Return payment details for frontend
+        return res.status(201).json({
             success: true,
-            data: payment
+            data: {
+                payment,
+                paymentDetails: {
+                    amount: booking.totalAmount,
+                    currency: 'INR',
+                    name: 'Call Karigar Service',
+                    description: `Payment for booking #${booking.id}`,
+                    customerId: booking.customerId,
+                    bookingId: booking.id,
+                    paymentId: payment._id,
+                }
+            }
         });
     } catch (error) {
         console.error('Create payment error:', error);
@@ -141,18 +135,50 @@ exports.createPayment = async (req, res) => {
 
 exports.getAllPayments = async (req, res) => {
     try {
+        // Verify admin access
+        if (req.user.role !== 'admin') {
+            console.log('Unauthorized access attempt:', req.user.role);
+            return res.status(403).json({
+                success: false,
+                message: 'Only admin users can access all payments'
+            });
+        }
+
+        console.log('Fetching all payments for admin:', req.user._id);
+
+        // Add pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Get total count for pagination
+        const totalCount = await Payment.countDocuments();
+
+        // Query with pagination and sorting
         const payments = await Payment.find()
-            .populate('customerId', 'name email')
-            .populate('workerId', 'name email')
-            .populate('bookingId');
+            .populate('customerId', 'name email phone')
+            .populate('workerId', 'name email phone')
+            .populate('bookingId')
+            .sort({ createdAt: -1 }) // Sort by newest first
+            .skip(skip)
+            .limit(limit);
+
+        console.log(`Found ${payments.length} payments`);
 
         res.status(200).json({
             success: true,
             count: payments.length,
+            total: totalCount,
+            pagination: {
+                page,
+                limit,
+                totalPages: Math.ceil(totalCount / limit),
+                hasMore: skip + payments.length < totalCount
+            },
             data: payments
         });
     } catch (error) {
-        console.error('Get payments error:', error);
+        console.error('Get all payments error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching payments',

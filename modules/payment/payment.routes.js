@@ -15,18 +15,16 @@ const {
 // All routes require authentication
 router.use(protect);
 
-// Admin routes
-router.get('/all', authorize('admin'), getAllPayments);
-
-// Customer routes
-router.get('/customer', authorize('customer'), getCustomerPayments);
-
-// Worker routes
-router.get('/worker', authorize('worker'), getWorkerPayments);
-
 // Mixed access routes
 router.post('/', createPayment);
 // router.post('/verify', verifyPayment);  // New endpoint for payment verification
+
+// Role-based routes
+router.get('/all', authorize('admin'), getAllPayments);
+router.get('/customer', authorize('customer'), getCustomerPayments);
+router.get('/worker', authorize('worker'), getWorkerPayments);
+
+// Dynamic parameter routes - MUST come after specific routes
 router.get('/:id', getPaymentById);
 router.get('/:id/status', getPaymentStatus);
 router.put('/:id', updatePayment);
