@@ -46,12 +46,8 @@ const corsOptions = {
 };
 
 corsOptions.origin = (origin, callback) => {
-  // Allow requests with no origin (like Postman) or any localhost port
-  if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
-    callback(null, true);
-  } else {
-    callback(new Error('Not allowed by CORS policy made for devlopment'));
-  }
+  // Allow all origins (can be restricted later for production)
+  callback(null, true);
 };
 
 // corsOptions.origin = (origin, callback) => {
