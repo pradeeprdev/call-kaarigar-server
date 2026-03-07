@@ -270,6 +270,65 @@ exports.deleteCustomerProfile = async (req, res) => {
         });
     }
 };
+// @desc    Upload customer profile photo
+// @route   PUT /api/customer-profile/:id/photo
+// @access  Private (Owner or Admin)
+exports.uploadProfilePhoto = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No file uploaded'
+            });
+        }
 
+        const profile = await CustomerProfile.findById(req.params.id);
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                message: 'Customer profile not found'
+            });
+        }
+
+        // Check ownership or admin status
+        if (profile.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to update this profile'
+            });
+        }
+
+        const { uploadToCloudinary, deleteFromCloudinary } = require('../../../utils/cloudinary');
+
+        // Delete old photo if exists
+        if (profile.photo && profile.photo !== 'default-profile.jpg') {
+            try {
+                const publicId = profile.photo.split('/').pop().split('.')[0];
+                await deleteFromCloudinary(publicId);
+            } catch (err) {
+                console.error('Error deleting old photo:', err);
+            }
+        }
+
+        // Upload new photo to Cloudinary
+        const result = await uploadToCloudinary(req.file.buffer, 'customer-profiles');
+
+        profile.photo = result.secure_url;
+        await profile.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile photo uploaded successfully',
+            data: profile
+        });
+    } catch (error) {
+        console.error('Upload profile photo error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error uploading profile photo',
+            error: error.message
+        });
+    }
+};
 // Note: Address-related operations should be handled by the addressController instead
 // The CustomerProfile only stores a reference to an address
