@@ -27,7 +27,6 @@ const couponRoutes = require('./modules/coupon/coupon.routes');
 const workerIndependentServiceRoutes = require('./modules/user/worker/workerService/workerIndependentService/workerIndependentService.routes');
 // const serviceRequestRoutes = require('./modules/serviceRequest/serviceRequest.routes');
 
-// Mount routes
 
 // CORS Configuration
 const corsOptions = {
